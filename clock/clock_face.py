@@ -1,7 +1,7 @@
-"""Виджет циферблата с сеткой букв (v2)"""
+"""Виджет циферблата с сеткой букв (v3)"""
 
-from PyQt6.QtWidgets import QWidget, QLabel, QGridLayout
-from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, pyqtProperty
+from PyQt6.QtWidgets import QWidget, QLabel, QGridLayout, QGraphicsDropShadowEffect
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QColor
 
 from datetime import datetime
@@ -15,30 +15,32 @@ class ClockFace(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.labels = []
-        self._scale = 1.0
         self._init_ui()
 
         # Состояние отображения
         self.text_mode = True
         self.show_minutes = False
         self.show_seconds = False
+        self.digit_submode = "hours"
         self.use_12h = True
         self.show_ampm = True
 
-        # Таймер обновления
+        # Таймер обновления букв (останавливается при паузе — см. ClockWindow)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_display)
         self.timer.start(1000)
+
+        # Применяем базовый масштаб (квадрат BASE_SIZE x BASE_SIZE)
+        self.set_scale(BASE_SIZE, BASE_SIZE)
         self.update_display()
 
     def _init_ui(self):
         self.layout = QGridLayout(self)
-        self.layout.setSpacing(0)   # Плотная сетка без промежутков (как на фото)
-        self.layout.setContentsMargins(4, 4, 4, 4)
+        self.layout.setSpacing(0)   # Плотная сетка без промежутков
+        self.layout.setContentsMargins(0, 0, 0, 0)
 
         font = QFont(FONT_FAMILY, FONT_SIZE)
         font.setWeight(int(FONT_WEIGHT))
-        font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 1)
 
         for row in range(GRID_ROWS):
             row_labels = []
@@ -46,41 +48,49 @@ class ClockFace(QWidget):
                 lbl = QLabel(GRID[row][col])
                 lbl.setFont(font)
                 lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                lbl.setFixedSize(BASE_CELL_SIZE, BASE_CELL_SIZE)
                 lbl.setStyleSheet(self._inactive_style())
+
+                # Свечение активных букв — QGraphicsDropShadowEffect вместо
+                # CSS text-shadow (Qt QSS его не поддерживает и спамит
+                # в консоль "Unknown property text-shadow").
+                effect = QGraphicsDropShadowEffect()
+                effect.setColor(QColor(COLOR_ACTIVE_GLOW))
+                effect.setBlurRadius(16)
+                effect.setOffset(0, 0)
+                lbl._glow_effect = effect
+
                 self.layout.addWidget(lbl, row, col)
                 row_labels.append(lbl)
             self.labels.append(row_labels)
-
-        self.setFixedSize(BASE_GRID_WIDTH + 8, BASE_GRID_HEIGHT + 8)
 
     def _inactive_style(self):
         return f"color: {COLOR_INACTIVE}; background: transparent; border: none;"
 
     def _active_style(self):
-        # Glow-эффект через text-shadow
-        return (f"color: {COLOR_ACTIVE}; background: transparent; border: none;"
-                f"text-shadow: 0 0 8px {COLOR_ACTIVE_GLOW}, 0 0 16px {COLOR_ACTIVE_GLOW};")
+        return f"color: {COLOR_ACTIVE}; background: transparent; border: none;"
 
-    def set_scale(self, scale: float):
-        """Масштабирование сетки при ресайзе окна"""
-        self._scale = scale
-        size = int(BASE_CELL_SIZE * scale)
-        font_size = max(8, int(FONT_SIZE * scale))
+    def set_scale(self, target_w: int, target_h: int):
+        """Масштабирование сетки под заданный размер.
+        Сетка 11x10 не квадратная, поэтому ширина и высота ячейки
+        считаются отдельно, чтобы итоговый виджет был точным квадратом
+        (target_w == target_h вызывающей стороной)."""
+        cell_w = target_w / GRID_COLS
+        cell_h = target_h / GRID_ROWS
+
+        font_size = max(6, int(min(cell_w, cell_h) * FONT_SIZE_RATIO))
         font = QFont(FONT_FAMILY, font_size)
         font.setWeight(int(FONT_WEIGHT))
-        font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, max(0, int(scale)))
+
+        glow_radius = max(6, int(min(cell_w, cell_h) * 0.55))
 
         for row in range(GRID_ROWS):
             for col in range(GRID_COLS):
                 lbl = self.labels[row][col]
                 lbl.setFont(font)
-                lbl.setFixedSize(size, size)
+                lbl.setFixedSize(round(cell_w), round(cell_h))
+                lbl._glow_effect.setBlurRadius(glow_radius)
 
-        self.setFixedSize(
-            int((BASE_GRID_WIDTH + 8) * scale),
-            int((BASE_GRID_HEIGHT + 8) * scale)
-        )
+        self.setFixedSize(round(target_w), round(target_h))
 
     def update_display(self):
         now = datetime.now()
@@ -97,8 +107,10 @@ class ClockFace(QWidget):
                 lbl = self.labels[row][col]
                 if (row, col) in active:
                     lbl.setStyleSheet(self._active_style())
+                    lbl.setGraphicsEffect(lbl._glow_effect)
                 else:
                     lbl.setStyleSheet(self._inactive_style())
+                    lbl.setGraphicsEffect(None)
 
     def set_mode(self, text_mode=None, minutes=None, seconds=None, format_12h=None, ampm=None):
         if text_mode is not None:

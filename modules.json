@@ -1,0 +1,7 @@
+{
+  "clock": {
+    "label": "Word Clock",
+    "script": "clock/main.py",
+    "socket_name": "wordclock_module_clock"
+  }
+}
