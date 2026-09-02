@@ -53,10 +53,19 @@ class ClockFace(QWidget):
                 # Свечение активных букв — QGraphicsDropShadowEffect вместо
                 # CSS text-shadow (Qt QSS его не поддерживает и спамит
                 # в консоль "Unknown property text-shadow").
+                #
+                # ВАЖНО: эффект прикрепляется к лейблу ОДИН РАЗ и остаётся
+                # прикреплённым навсегда — переключаем только setEnabled().
+                # setGraphicsEffect(None) удаляет C++-объект эффекта
+                # (виджет им владеет), и повторная попытка переиспользовать
+                # тот же Python-объект эффекта приводит к падению
+                # приложения при следующей активации этой же буквы.
                 effect = QGraphicsDropShadowEffect()
                 effect.setColor(QColor(COLOR_ACTIVE_GLOW))
                 effect.setBlurRadius(16)
                 effect.setOffset(0, 0)
+                effect.setEnabled(False)
+                lbl.setGraphicsEffect(effect)
                 lbl._glow_effect = effect
 
                 self.layout.addWidget(lbl, row, col)
@@ -105,12 +114,12 @@ class ClockFace(QWidget):
         for row in range(GRID_ROWS):
             for col in range(GRID_COLS):
                 lbl = self.labels[row][col]
-                if (row, col) in active:
+                is_active = (row, col) in active
+                if is_active:
                     lbl.setStyleSheet(self._active_style())
-                    lbl.setGraphicsEffect(lbl._glow_effect)
                 else:
                     lbl.setStyleSheet(self._inactive_style())
-                    lbl.setGraphicsEffect(None)
+                lbl._glow_effect.setEnabled(is_active)
 
     def set_mode(self, text_mode=None, minutes=None, seconds=None, format_12h=None, ampm=None):
         if text_mode is not None:

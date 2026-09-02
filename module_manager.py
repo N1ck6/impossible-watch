@@ -84,8 +84,15 @@ def send_command(socket_name: str, command: str) -> bool:
         return False
     sock.write(command.encode("utf-8"))
     sock.waitForBytesWritten(IPC_TIMEOUT_MS)
-    sock.disconnectFromServer()
-    sock.waitForDisconnected(IPC_TIMEOUT_MS)
+
+    # disconnectFromServer() часто завершается синхронно (сокет уже
+    # переходит в UnconnectedState), и последующий waitForDisconnected()
+    # на уже отключённом сокете печатает предупреждение Qt в консоль.
+    # Ждём только если сокет реально ещё подключен.
+    if sock.state() != QLocalSocket.LocalSocketState.UnconnectedState:
+        sock.disconnectFromServer()
+        if sock.state() != QLocalSocket.LocalSocketState.UnconnectedState:
+            sock.waitForDisconnected(IPC_TIMEOUT_MS)
     return True
 
 

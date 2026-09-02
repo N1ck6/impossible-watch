@@ -66,19 +66,26 @@ class ClockWindow(QMainWindow):
             self.clock.height() + WINDOW_PADDING * 2,
         )
 
-        # Кнопки-точки по углам
+        # Кнопки-точки по углам (текст/цифры, 12/24ч)
         self.btn_lt = self._create_corner_button("Текст / цифры (Space)")
-        self.btn_lb = self._create_corner_button("Следующий режим: часы → минуты → секунды")
         self.btn_rt = self._create_corner_button("12ч / 24ч формат")
-        self.btn_rb = self._create_corner_button("Предыдущий режим: секунды → минуты → часы")
+
+        # Кнопки прямого выбора режима цифрового отображения — H/M/S
+        # вместо анонимных точек с цикличным переключением (интуитивнее:
+        # сразу видно, какая буква что делает, и можно выбрать нужный
+        # режим одним кликом, а не листать по кругу).
+        self.btn_h = self._create_submode_button("H", "Показать часы")
+        self.btn_m = self._create_submode_button("M", "Показать минуты")
+        self.btn_s = self._create_submode_button("S", "Показать секунды")
 
         self._position_buttons()
 
         # Сигналы
         self.btn_lt.clicked.connect(self._toggle_text_mode)
-        self.btn_lb.clicked.connect(lambda: self._cycle_digit_mode(+1))
         self.btn_rt.clicked.connect(self._toggle_format)
-        self.btn_rb.clicked.connect(lambda: self._cycle_digit_mode(-1))
+        self.btn_h.clicked.connect(lambda: self._select_digit_mode("hours"))
+        self.btn_m.clicked.connect(lambda: self._select_digit_mode("minutes"))
+        self.btn_s.clicked.connect(lambda: self._select_digit_mode("seconds"))
 
         # Начальное состояние
         self._update_buttons()
@@ -119,12 +126,28 @@ class ClockWindow(QMainWindow):
         """)
         return btn
 
+    def _create_submode_button(self, letter: str, tooltip: str) -> QPushButton:
+        btn = QPushButton(letter, self)
+        btn.setFixedSize(SUBMODE_BTN_W, SUBMODE_BTN_H)
+        btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        btn.setToolTip(tooltip)
+        font = QFont(FONT_FAMILY)
+        font.setPixelSize(SUBMODE_BTN_FONT_PX)
+        font.setBold(True)
+        btn.setFont(font)
+        return btn
+
     def _position_buttons(self):
         m = BUTTON_MARGIN
         self.btn_lt.move(m, m)
-        self.btn_lb.move(m, self.height() - BUTTON_SIZE - m)
         self.btn_rt.move(self.width() - BUTTON_SIZE - m, m)
-        self.btn_rb.move(self.width() - BUTTON_SIZE - m, self.height() - BUTTON_SIZE - m)
+
+        total_w = 3 * SUBMODE_BTN_W + 2 * SUBMODE_BTN_SPACING
+        start_x = (self.width() - total_w) // 2
+        y = self.height() - SUBMODE_BTN_H - m
+        self.btn_h.move(start_x, y)
+        self.btn_m.move(start_x + SUBMODE_BTN_W + SUBMODE_BTN_SPACING, y)
+        self.btn_s.move(start_x + 2 * (SUBMODE_BTN_W + SUBMODE_BTN_SPACING), y)
 
     def _init_shortcuts(self):
         # Ctrl+Q — выход с анимацией (то же самое, что IPC-команда "stop")
@@ -233,17 +256,13 @@ class ClockWindow(QMainWindow):
         self._update_buttons()
         self.clock.update_display()
 
-    def _cycle_digit_mode(self, direction: int):
-        """Циклическое переключение часы→минуты→секунды (или назад).
-        Заменяет старые независимые toggle-кнопки, из-за которых легко
-        было пропустить нужное состояние."""
+    def _select_digit_mode(self, mode: str):
+        """Прямой выбор режима цифрового отображения по кнопке H/M/S."""
         if self.clock.text_mode:
             return
-        idx = DIGIT_SUBMODES.index(self.clock.digit_submode)
-        idx = (idx + direction) % len(DIGIT_SUBMODES)
-        self.clock.digit_submode = DIGIT_SUBMODES[idx]
-        self.clock.show_minutes = self.clock.digit_submode == "minutes"
-        self.clock.show_seconds = self.clock.digit_submode == "seconds"
+        self.clock.digit_submode = mode
+        self.clock.show_minutes = mode == "minutes"
+        self.clock.show_seconds = mode == "seconds"
         self._update_buttons()
         self.clock.update_display()
 
@@ -257,14 +276,15 @@ class ClockWindow(QMainWindow):
         # ЛВ: горит в текстовом режиме
         self._set_btn_state(self.btn_lt, self.clock.text_mode)
 
-        # ЛН/ПН: кнопки цикла режима — просто вкл/выкл в зависимости от
-        # текст/цифры; текущий режим показывает буква H/M/S на циферблате
-        enabled = not self.clock.text_mode
-        self._set_btn_state(self.btn_lb, False, enabled)
-        self._set_btn_state(self.btn_rb, False, enabled)
-
         # ПВ: горит в 12-часовом формате
         self._set_btn_state(self.btn_rt, self.clock.use_12h)
+
+        # H/M/S: горит та буква, что выбрана сейчас; все три отключены
+        # (тусклые) в текстовом режиме
+        enabled = not self.clock.text_mode
+        self._set_submode_btn_state(self.btn_h, self.clock.digit_submode == "hours", enabled)
+        self._set_submode_btn_state(self.btn_m, self.clock.digit_submode == "minutes", enabled)
+        self._set_submode_btn_state(self.btn_s, self.clock.digit_submode == "seconds", enabled)
 
     def _set_btn_state(self, btn, active, enabled=True):
         if not enabled:
@@ -279,6 +299,28 @@ class ClockWindow(QMainWindow):
                 background-color: {color};
                 border-radius: {BUTTON_SIZE // 2}px;
                 border: none;
+            }}
+            QPushButton:hover {{
+                background-color: {hover};
+            }}
+        """)
+        btn.setEnabled(enabled)
+
+    def _set_submode_btn_state(self, btn, active, enabled=True):
+        if not enabled:
+            bg, fg, hover = COLOR_BUTTON_DISABLED, "#2a2a2a", COLOR_BUTTON_DISABLED
+        elif active:
+            bg, fg, hover = COLOR_BUTTON_ACTIVE, COLOR_BG, "#ffffff"
+        else:
+            bg, fg, hover = COLOR_BUTTON_INACTIVE, "#999999", "#555555"
+
+        btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {bg};
+                color: {fg};
+                border-radius: 2px;
+                border: none;
+                padding: 0px;
             }}
             QPushButton:hover {{
                 background-color: {hover};
@@ -351,7 +393,7 @@ class ClockWindow(QMainWindow):
             return
 
         # Игнорируем клики по кнопкам
-        for btn in (self.btn_lt, self.btn_lb, self.btn_rt, self.btn_rb):
+        for btn in (self.btn_lt, self.btn_rt, self.btn_h, self.btn_m, self.btn_s):
             if btn.geometry().contains(event.pos()):
                 return
 
@@ -455,7 +497,7 @@ class ClockWindow(QMainWindow):
         if self._exit_labels:
             lbl = self._exit_labels.pop(0)
             lbl.setStyleSheet(self.clock._inactive_style())
-            lbl.setGraphicsEffect(None)
+            lbl._glow_effect.setEnabled(False)
         else:
             self._exit_timer.stop()
             self._fade_window()

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import List, Tuple, Set
-from config import GRID, MODE_INDICATORS
+from config import GRID
 
 # ═══════════════════════════════════════════════════════════
 # КООРДИНАТЫ СЛОВ (row, col) — сетка ITISHMSAMPM + остальные строки
@@ -13,8 +13,9 @@ from config import GRID, MODE_INDICATORS
 #   - QUARTER светила как "CQUARTE" без последней R (было со сдвигом
 #     на 1 колонку влево) -> теперь верно "QUARTER"
 #   - TO светила как "FTO" с лишней буквой F -> теперь верно "TO"
-# Индикаторы H/M/S вынесены отдельно в MODE_INDICATORS (config.py) —
-# в WORDS они не нужны и были источником путаницы.
+# Буквы H/M/S в верхней строке больше не подсвечиваются как индикатор
+# режима (режим теперь показывают кнопки H/M/S, см. clock_window.py) —
+# в WORDS они и не нужны.
 # ═══════════════════════════════════════════════════════════
 WORDS = {
     'IT': [(0, 0), (0, 1)],
@@ -227,20 +228,19 @@ def get_digit_time_coords(
     show_seconds: bool = False,
     use_12h: bool = True
 ) -> Set[Tuple[int, int]]:
-    """Возвращает координаты букв для цифрового отображения + индикатор режима"""
+    """Возвращает координаты букв для цифрового отображения.
+    Текущий режим (часы/минуты/секунды) теперь показывают кнопки H/M/S,
+    поэтому буквы-индикаторы на самом циферблате больше не подсвечиваются."""
     coords = set()
 
     if show_seconds:
         val = dt.second
-        coords.update([MODE_INDICATORS['S']])
         coords.update(get_number_coords(val, 1, 0, always_two=True))
     elif show_minutes:
         val = dt.minute
-        coords.update([MODE_INDICATORS['M']])
         coords.update(get_number_coords(val, 1, 0, always_two=True))
     else:
         val = dt.hour
-        coords.update([MODE_INDICATORS['H']])
         if use_12h:
             val = val % 12
             if val == 0:
