@@ -1,24 +1,79 @@
-# Цвета
-COLOR_BG = "#050505"
-COLOR_INACTIVE = "#2a2a2a"
-COLOR_ACTIVE = "#40E0D0"       # бирюзовый/голубой
-COLOR_FRAME = "#D4AF37"        # золотой
-COLOR_BUTTON_ACTIVE = "#40E0D0"
-COLOR_BUTTON_INACTIVE = "#333333"
-COLOR_BUTTON_DISABLED = "#1a1a1a"
+"""Конфигурация и стили приложения (v2 — по фото)"""
 
-# Шрифт
-FONT_FAMILY = "Consolas, 'Courier New', monospace"
-FONT_SIZE = 20
+import sys
 
-# Размеры сетки
-CELL_SIZE = 26
+# ═══════════════════════════════════════════════════════════
+# ЦВЕТА (анализ фото)
+# ═══════════════════════════════════════════════════════════
+COLOR_BG = "#0a0a0a"              # Глубокий чёрный фон
+COLOR_INACTIVE = "#1a1a1a"        # Почти невидимые буквы
+COLOR_ACTIVE = "#e0f7ff"          # Яркий бело-голубой
+COLOR_ACTIVE_GLOW = "#40a0ff"     # Цвет glow-эффекта
+COLOR_FRAME = "#888888"           # Тонкий серебристый ободок
+COLOR_FRAME_HOVER = "#aaaaaa"     # Ободок при наведении
+COLOR_BUTTON_ACTIVE = "#e0f7ff"   # Точка горит
+COLOR_BUTTON_INACTIVE = "#333333" # Точка не горит
+COLOR_BUTTON_DISABLED = "#111111" # Точка отключена
+
+# ═══════════════════════════════════════════════════════════
+# ШРИФТ
+# ═══════════════════════════════════════════════════════════
+# На фото: sans-serif, medium weight, крупный, равномерный
+FONT_FAMILY = "Segoe UI, Arial, Helvetica, sans-serif"
+FONT_SIZE = 22
+FONT_WEIGHT = "500"  # medium
+
+# ═══════════════════════════════════════════════════════════
+# РАЗМЕРЫ СЕТКИ (11 столбцов × 10 строк)
+# ═══════════════════════════════════════════════════════════
 GRID_COLS = 11
 GRID_ROWS = 10
-GRID_WIDTH = GRID_COLS * CELL_SIZE
-GRID_HEIGHT = GRID_ROWS * CELL_SIZE
 
-# Окно
-WINDOW_PADDING = 16
-BUTTON_SIZE = 10
-BUTTON_MARGIN = 6
+# Базовые размеры (масштабируются при ресайзе)
+BASE_CELL_SIZE = 28
+BASE_GRID_WIDTH = GRID_COLS * BASE_CELL_SIZE
+BASE_GRID_HEIGHT = GRID_ROWS * BASE_CELL_SIZE
+
+# ═══════════════════════════════════════════════════════════
+# ОКНО
+# ═══════════════════════════════════════════════════════════
+WINDOW_PADDING = 12               # Отступ от сетки до рамки
+BUTTON_SIZE = 8                   # Маленькие точки по углам
+BUTTON_MARGIN = 4                 # Отступ точек от края
+
+# Ресайз
+RESIZE_HANDLE_SIZE = 12           # Невидимые зоны ресайза по углам
+MIN_WIDTH = 220
+MIN_HEIGHT = 160
+MAX_WIDTH = 800
+MAX_HEIGHT = 600
+
+# ═══════════════════════════════════════════════════════════
+# АНИМАЦИЯ
+# ═══════════════════════════════════════════════════════════
+EXIT_ANIMATION_DURATION = 1200    # мс — анимация выхода
+FADE_STEPS = 30                   # Количество шагов затухания
+FADE_INTERVAL = 40                # мс между шагами
+
+# ═══════════════════════════════════════════════════════════
+# НОВАЯ СЕТКА: ITLISMHAMPM
+# ═══════════════════════════════════════════════════════════
+GRID = [
+    "ITLISMHAMPM",
+    "ACQUARTERDC",
+    "TWENTYFIVEX",
+    "HALFBTENFTO",
+    "PASTERUNINE",
+    "ONESIXTHREE",
+    "FOURFIVETWO",
+    "EIGHTELEVEN",
+    "SEVENTWELVE",
+    "TENSEOCLOCK"
+]
+
+# Координаты индикаторов режима в верхней строке
+MODE_INDICATORS = {
+    'H': (0, 5),   # ITLIS **H** AMPM
+    'M': (0, 6),   # ITLIS *M* HAMPM
+    'S': (0, 7),   # ITLIS **S** MHAMPM
+}

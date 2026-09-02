@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Точка входа Word Clock"""
+"""Точка входа Word Clock v2"""
 
 import sys
 from PyQt6.QtWidgets import QApplication
