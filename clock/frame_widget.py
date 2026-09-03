@@ -11,18 +11,24 @@ from config import (
 
 
 class FrameWidget(QWidget):
-    """Центральный виджет окна: рисует фон и золотую рамку.
+    """Центральный виджет окна: рисует фон и обводку-прогресс-бар.
 
     Рамка состоит из двух слоёв:
       - тусклая база — полный периметр, видна всегда (гарантирует
         требование ТЗ "обводка золотого цвета" даже когда прогресс = 0);
       - яркая часть — оставшаяся доля периметра, "стирается" по часовой
         стрелке от левого верхнего угла (см. set_progress).
+
+    Цвет обводки переключается между золотым (рабочая стадия Pomodoro
+    или простой режим часов) и салатовым (стадия перерыва) через
+    set_colors().
     """
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._progress = 1.0  # доля периметра, которая ещё "горит" (1.0 = полностью)
+        self._bright_color = COLOR_FRAME_GOLD
+        self._dim_color = COLOR_FRAME_GOLD_DIM
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAutoFillBackground(False)
 
@@ -30,6 +36,12 @@ class FrameWidget(QWidget):
         lit_fraction = max(0.0, min(1.0, lit_fraction))
         if abs(lit_fraction - self._progress) > 0.0005:
             self._progress = lit_fraction
+            self.update()
+
+    def set_colors(self, bright: str, dim: str):
+        if bright != self._bright_color or dim != self._dim_color:
+            self._bright_color = bright
+            self._dim_color = dim
             self.update()
 
     @staticmethod
@@ -75,7 +87,7 @@ class FrameWidget(QWidget):
         painter.drawRoundedRect(rect, FRAME_RADIUS, FRAME_RADIUS)
 
         # Тусклая база обводки — весь периметр
-        dim_pen = QPen(QColor(COLOR_FRAME_GOLD_DIM), FRAME_BORDER_WIDTH)
+        dim_pen = QPen(QColor(self._dim_color), FRAME_BORDER_WIDTH)
         dim_pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         painter.setPen(dim_pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
@@ -84,7 +96,7 @@ class FrameWidget(QWidget):
         # Яркая обводка — оставшаяся доля периметра (прогресс-бар)
         if self._progress > 0.001:
             erased = 1.0 - self._progress
-            bright_pen = QPen(QColor(COLOR_FRAME_GOLD), FRAME_BORDER_WIDTH)
+            bright_pen = QPen(QColor(self._bright_color), FRAME_BORDER_WIDTH)
             bright_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             bright_pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
             painter.setPen(bright_pen)

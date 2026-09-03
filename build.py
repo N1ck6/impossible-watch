@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""Сборка исполняемых файлов: Word Clock (модуль) + Module Manager"""
+"""Сборка исполняемых файлов всех модулей + менеджера"""
 
 import PyInstaller.__main__
 
+MODULES = [
+    ("clock/main.py", "WordClock"),
+    ("habits/main.py", "HabitTracker"),
+    ("focus_guard/main.py", "FocusGuard"),
+]
 
-def build_clock():
-    """Собирает модуль часов в dist/WordClock/"""
+
+def build_module(script, name):
     PyInstaller.__main__.run([
-        'clock/main.py',
-        '--name=WordClock',
+        script,
+        f'--name={name}',
         '--noconfirm',
         '--clean',
         '--windowed',
@@ -17,7 +22,6 @@ def build_clock():
 
 
 def build_manager():
-    """Собирает менеджер модулей в dist/ModuleManager/"""
     PyInstaller.__main__.run([
         'module_manager.py',
         '--name=ModuleManager',
@@ -29,11 +33,14 @@ def build_manager():
 
 
 if __name__ == "__main__":
-    build_clock()
+    for script, name in MODULES:
+        build_module(script, name)
     build_manager()
     print(
-        "\nГотово: dist/WordClock/ и dist/ModuleManager/.\n"
-        "Не забудьте положить modules.json рядом с ModuleManager.exe "
-        "и при необходимости обновить в нём путь \"script\" на "
-        "собранный WordClock (например dist/WordClock/WordClock.exe)."
+        "\nГотово: dist/WordClock/, dist/HabitTracker/, dist/FocusGuard/, "
+        "dist/ModuleManager/.\n"
+        "Не забудьте положить modules.json рядом с ModuleManager и обновить "
+        "в нём пути \"script\" на собранные exe.\n"
+        "FocusGuard для блокировки сайтов нужно запускать с правами "
+        "администратора/root."
     )

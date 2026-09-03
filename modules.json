@@ -3,5 +3,15 @@
     "label": "Word Clock",
     "script": "clock/main.py",
     "socket_name": "wordclock_module_clock"
+  },
+  "habits": {
+    "label": "Habit Tracker",
+    "script": "habits/main.py",
+    "socket_name": "wordclock_module_habits"
+  },
+  "focus_guard": {
+    "label": "Focus Guard",
+    "script": "focus_guard/main.py",
+    "socket_name": "wordclock_module_focus_guard"
   }
 }

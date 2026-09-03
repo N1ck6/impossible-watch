@@ -13,8 +13,11 @@ COLOR_INACTIVE = "#1a1a1a"        # Почти невидимые буквы
 COLOR_ACTIVE = "#e0f7ff"          # Яркий бело-голубой
 COLOR_ACTIVE_GLOW = "#40a0ff"     # Цвет glow-эффекта активных букв
 
-COLOR_FRAME_GOLD = "#d4af37"      # Золотая обводка (полная/яркая часть)
-COLOR_FRAME_GOLD_DIM = "#4a3c17"  # Тусклая база обводки (всегда видна)
+COLOR_FRAME_GOLD = "#d4af37"      # Золотая обводка — стадия работы
+COLOR_FRAME_GOLD_DIM = "#4a3c17"
+
+COLOR_FRAME_LIME = "#019c3d"      # Салатовая обводка — стадия перерыва
+COLOR_FRAME_LIME_DIM = "#3d4a17"
 
 COLOR_BUTTON_ACTIVE = "#e0f7ff"   # Точка горит
 COLOR_BUTTON_INACTIVE = "#333333" # Точка не горит
@@ -56,8 +59,28 @@ SUBMODE_BTN_H = 11
 SUBMODE_BTN_SPACING = 2
 SUBMODE_BTN_FONT_PX = 8
 
+# Кнопка-иконка таймера (правый нижний угол): открывает/закрывает
+# настройки Pomodoro, во время работы таймера — отменяет сессию.
+TIMER_BTN_SIZE = 14
+TIMER_BTN_FONT_PX = 9
+
+# Кнопка "пропустить стадию" — занимает место кнопок H/M/S, пока
+# работает Pomodoro-таймер.
+SKIP_BTN_FONT_PX = 9
+
+# ═══════════════════════════════════════════════════════════
+# POMODORO — значения по умолчанию и границы настроек
+# ═══════════════════════════════════════════════════════════
+POMO_DEFAULT_SESSION_MIN = 25
+POMO_DEFAULT_BREAK_MIN = 5
+POMO_DEFAULT_REPEATS = 4
+
+POMO_SESSION_MIN_MIN, POMO_SESSION_MIN_MAX, POMO_SESSION_STEP = 5, 90, 5
+POMO_BREAK_MIN_MIN, POMO_BREAK_MIN_MAX, POMO_BREAK_STEP = 1, 30, 1
+POMO_REPEATS_MIN, POMO_REPEATS_MAX, POMO_REPEATS_STEP = 1, 12, 1
+
 RESIZE_HANDLE_SIZE = 12           # Невидимые зоны ресайза по углам
-MIN_SIZE = 200                    # Мин. сторона квадрата
+MIN_SIZE = 260                    # Мин. сторона квадрата (нужно место под панель Pomodoro)
 MAX_SIZE = 640                    # Макс. сторона квадрата
 
 FRAME_BORDER_WIDTH = 3            # Толщина золотой обводки
